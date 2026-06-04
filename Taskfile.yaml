@@ -12,6 +12,12 @@ tasks:
       - task --list
     silent: true
 
+  init:
+    desc: all initializations and setup tasks
+    cmds:
+      - echo 'export PATH="$PATH:$(go env GOPATH)/bin"' >> ~/.zshrc
+      - echo 'restart the shell or run source ~/.zshrc'
+
   tidy:
     desc: Resolve and download dependencies
     cmds:
