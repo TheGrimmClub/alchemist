@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  VERSION: 0.1.0
+  PROJECT_NAME: exists
+
+tasks:
+  clean:
+    desc: Clean the project
+    cmds:
+      - echo "Cleaning the project..."
+      - rm exists.exe
+  build:
+    desc: Build the project
+    summary: |
+      Build the project and create an executable named exists.exe.
+    silent: true
+    cmds:
+      - echo "Building the project..."
+      - go build -o exists.exe .
+  test:
+    desc: Run tests
+    silent: true
+    cmds:
+      - echo "Running tests..."
+      - uv run behave
