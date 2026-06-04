@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
-	"github.com/TheGrimmClub/alchemist/internal/prompt"
+	"github.com/TheGrimmClub/alchemist/internal/tui"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -17,30 +16,10 @@ undone. Untracked files are left alone — use 'alchemist clean' for those.`,
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-
-		changed, err := gitutil.ChangedFiles()
+		m, err := tea.NewProgram(tui.NewDiscardModel()).Run()
 		if err != nil {
 			return err
 		}
-		if len(changed) == 0 {
-			fmt.Println("Nothing to discard — no changes to tracked files.")
-			return nil
-		}
-
-		fmt.Println("These changes will be permanently thrown away:")
-		for _, f := range changed {
-			fmt.Printf("  - %s\n", f)
-		}
-		fmt.Println()
-
-		if !prompt.Confirm("This cannot be undone. Discard them?", false) {
-			fmt.Println("Cancelled — nothing was changed.")
-			return nil
-		}
-		if err := gitutil.DiscardAll(); err != nil {
-			return err
-		}
-		fmt.Println("Changes discarded.")
-		return nil
+		return m.(tui.DiscardModel).FinalErr
 	},
 }

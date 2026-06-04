@@ -1,4 +1,4 @@
-// Package editor opens text in the user's editor and returns the result.
+// Package editor opens text in the user's preferred editor.
 package editor
 
 import (
@@ -8,31 +8,43 @@ import (
 	"runtime"
 )
 
-// Edit writes content to a temp file, opens it in an editor, and returns
-// the edited text. It prefers micro, then $EDITOR, then an OS default.
-func Edit(content string) (string, error) {
+// WriteTempFile writes content to a new temp file and returns its path.
+// The caller is responsible for removing the file.
+func WriteTempFile(content string) (string, error) {
 	tmp, err := os.CreateTemp("", "alchemist-*.txt")
 	if err != nil {
 		return "", err
 	}
-	defer os.Remove(tmp.Name())
-
 	if _, err := tmp.WriteString(content); err != nil {
 		tmp.Close()
+		os.Remove(tmp.Name())
 		return "", err
 	}
 	tmp.Close()
+	return tmp.Name(), nil
+}
 
-	editor := pick()
-	cmd := exec.Command(editor, tmp.Name())
+// Command returns an exec.Cmd that opens path in the preferred editor.
+// Use with tea.ExecProcess to suspend the TUI while editing.
+func Command(path string) *exec.Cmd {
+	return exec.Command(pick(), path)
+}
+
+// Edit writes content to a temp file, opens it, and returns the edited text.
+func Edit(content string) (string, error) {
+	path, err := WriteTempFile(content)
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(path)
+	cmd := Command(path)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("could not open editor %q: %w", editor, err)
+		return "", fmt.Errorf("could not open editor %q: %w", pick(), err)
 	}
-
-	edited, err := os.ReadFile(tmp.Name())
+	edited, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}

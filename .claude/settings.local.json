@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(task tidy *)",
+      "Bash(exists --help)",
+      "Bash(task test *)",
+      "Bash(go build *)",
+      "Bash(go vet *)",
+      "Bash(go mod *)",
+      "Bash(/tmp/alchemist-test --help)"
+    ]
+  }
+}

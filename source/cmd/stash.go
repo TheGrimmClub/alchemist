@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
+	"github.com/TheGrimmClub/alchemist/internal/tui"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
@@ -18,18 +18,11 @@ working tree so you can switch gears. Run with --resume to bring the work back.`
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-
-		if stashResume {
-			fmt.Println("Bringing your paused work back...")
-			return gitutil.StashPop()
-		}
-
-		fmt.Println("Pausing your work and setting it aside...")
-		if err := gitutil.Stash(""); err != nil {
+		m, err := tea.NewProgram(tui.NewStashModel(stashResume)).Run()
+		if err != nil {
 			return err
 		}
-		fmt.Println("Done — working tree is clean. Run 'alchemist stash --resume' to bring it back.")
-		return nil
+		return m.(tui.StashModel).FinalErr
 	},
 }
 
