@@ -43,13 +43,16 @@ Requires [Go](https://go.dev/dl/) 1.22+ and `git` on your PATH.
 ```
 git clone https://github.com/TheGrimmClub/alchemist.git
 cd alchemist
+cd source
 go mod tidy
+go mod download github.com/spf13/cobra
+go get github.com/spf13/cobra@v1.8.1
+go mod download github.com/cpuguy83/go-md2man/v2
 go install .
 ```
 
 `go install` puts the `alchemist` binary in your Go bin directory. Make sure
-that directory is on your PATH (on Windows it's usually
-`%USERPROFILE%\go\bin`).
+that directory is on your PATH (on Windows it's usually `%USERPROFILE%\go\bin`).
 
 If you use [Task](https://taskfile.dev), `task install` does the same thing.
 
@@ -71,9 +74,9 @@ add Alchemist to an existing project, add this line to your `.gitignore`:
 
 ## For the Grimm Club
 
-- [The Alchemist's Grimoire](GRIMMOIRE.md) — a themed reference for every spell,
+- [The Alchemist's Grimoire](./help/GRIMMOIRE/alchemist.grimmoire.md) — a themed reference for every spell,
   with the plain-git equivalent of each so you learn the real craft.
-- [Lesson 1: Your First Brew](docs/lesson-1-first-brew.md) — a ~30 minute guided
+- [Lesson 1: Your First Brew](docs/1__first_brew.lesson.md) — a ~30 minute guided
   first session.
 
 ## License
