@@ -1,14 +1,12 @@
 import json
 import os
-import platform
 import shlex
 import subprocess
 import sys
 
-from behave import given, when, then
+from behave import given, then, when
 
-
-BINARY = "./exists.exe" if sys.platform == "win32" else "./exists"
+BINARY = "./alchemist.exe" if sys.platform == "win32" else "alchemist"
 IS_WINDOWS = sys.platform == "win32"
 
 
@@ -25,23 +23,28 @@ def _run(args: list[str], extra_env: dict | None = None) -> tuple[int, str, str]
     print(f"DEBUG stderr: {proc.stderr!r}")
     return proc.returncode, proc.stdout, proc.stderr
 
+
 # ---------------------------------------------------------------------------
 # Given
 # ---------------------------------------------------------------------------
+
 
 @given('the environment variable "{name}" is set to "{value}"')
 def step_set_env(context, name, value):
     context.extra_env = getattr(context, "extra_env", {})
     context.extra_env[name] = value
 
+
 @given('the environment variable "{name}" is empty')
 def step_set_env_empty(context, name):
     context.extra_env = getattr(context, "extra_env", {})
     context.extra_env[name] = ""
 
+
 # ---------------------------------------------------------------------------
 # When
 # ---------------------------------------------------------------------------
+
 
 @when('I run exists with "{command}"')
 def step_run(context, command):
@@ -70,7 +73,8 @@ def step_run_unix(context, command):
 # Then
 # ---------------------------------------------------------------------------
 
-@then('the exit code is {code:d}')
+
+@then("the exit code is {code:d}")
 def step_exit_code(context, code):
     if getattr(context, "skip_remaining_steps", False):
         return
@@ -98,19 +102,16 @@ def step_stderr_contains(context, text):
     if getattr(context, "skip_remaining_steps", False):
         return
     assert text in context.stderr, (
-        f"Expected stderr to contain {text!r}\n"
-        f"stderr: {context.stderr!r}"
+        f"Expected stderr to contain {text!r}\nstderr: {context.stderr!r}"
     )
 
 
-@then('there is no output')
+@then("there is no output")
 def step_no_output(context):
     if getattr(context, "skip_remaining_steps", False):
         return
     assert context.stdout == "" and context.stderr == "", (
-        f"Expected no output\n"
-        f"stdout: {context.stdout!r}\n"
-        f"stderr: {context.stderr!r}"
+        f"Expected no output\nstdout: {context.stdout!r}\nstderr: {context.stderr!r}"
     )
 
 

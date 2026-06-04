@@ -89,3 +89,13 @@ tasks:
       - task: fmt
       - task: vet
       - task: build
+
+  test:
+    desc: Run tests
+    dir: .
+    preconditions:
+      - sh: exists directory "./tests/features"
+        msg: did not find `main.go` in ./{{.SOURCE_DIR}}
+    cmds:
+      - echo "Running tests..."
+      - uv run behave
