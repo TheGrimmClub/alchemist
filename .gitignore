@@ -1,0 +1,12 @@
+# Build output
+/alchemist
+/alchemist.exe
+/bin/
+/dist/
+
+# Alchemist's own task state
+.alchemist/
+
+# Editor / OS noise
+*.swp
+.DS_Store

@@ -1,0 +1,50 @@
+# Taskfile.yaml — build tasks for Alchemist itself
+# Docs: https://taskfile.dev
+version: "3"
+
+vars:
+  BINARY: alchemist
+  VERSION: 2026.1.0
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  tidy:
+    desc: Resolve and download dependencies
+    cmds:
+      - go mod tidy
+
+  build:
+    desc: Build the binary into ./bin
+    cmds:
+      - go build -o bin/{{.BINARY}} .
+
+  install:
+    desc: Install the binary onto your PATH (go bin dir)
+    cmds:
+      - go install .
+
+  run:
+    desc: "Run without building — usage: task run -- start"
+    cmds:
+      - go run . {{.CLI_ARGS}}
+
+  fmt:
+    desc: Format the code
+    cmds:
+      - gofmt -w .
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  check:
+    desc: Format, vet, and build
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: build
