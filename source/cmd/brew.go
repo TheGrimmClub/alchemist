@@ -28,7 +28,12 @@ before the commit is made.`,
 
 		s, err := state.Load()
 		if err != nil || s.TaskName == "" {
-			return fmt.Errorf("no task in progress — run 'alchemist start' first")
+			fmt.Printf("your caldron is empty - no task in progress\n — run 'alchemist start' first")
+			// ask if a task should be named immediately
+			if !prompt.Confirm("Would you like to start a new task?", true) {
+				return nil
+			}
+
 		}
 
 		changed, err := gitutil.ChangedFiles()
@@ -41,7 +46,7 @@ before the commit is made.`,
 		}
 		files := append(changed, untracked...)
 		if len(files) == 0 {
-			fmt.Println("Nothing to commit — your working tree is clean.")
+			fmt.Println("Nothing in the cauldron — your working tree is clean.")
 			return nil
 		}
 
@@ -51,23 +56,21 @@ before the commit is made.`,
 		}
 		fmt.Println()
 
-		if !prompt.Confirm("Stage all of these?", true) {
-			fmt.Println("Stage what you want with 'git add', then run 'alchemist brew' again.")
+		if !prompt.Confirm("Bottle all of these files?", true) {
+			fmt.Println("Hint: Stage what you want with 'git add', then run 'alchemist brew' again.")
 			return nil
 		}
 		if err := gitutil.AddAll(); err != nil {
 			return err
 		}
-
-		summary := prompt.Line("In one line, what did you do? ")
-
+		summary := ""
 		edited, err := editor.Edit(buildMessage(s, summary, files))
 		if err != nil {
 			return err
 		}
 		message := stripComments(edited)
 		if strings.TrimSpace(message) == "" {
-			return fmt.Errorf("empty commit message — aborting")
+			return fmt.Errorf("Please add a label to you bottle\n - no commit message — aborting")
 		}
 
 		if err := gitutil.Commit(message); err != nil {

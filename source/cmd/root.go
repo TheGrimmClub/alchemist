@@ -19,6 +19,7 @@ var rootCmd = &cobra.Command{
   discard  Throw away uncommitted changes to tracked files
   stash    Pause work and set it aside to resume later
   clean    Remove untracked files (build artifacts, stray files)
+  hm       Find what you where actively working on.
 
 Typical flow:  start  ->  (write code)  ->  brew  ->  bottle`,
 }
@@ -40,5 +41,6 @@ func init() {
 		discardCmd,
 		stashCmd,
 		cleanCmd,
+		hmCmd,
 	)
 }

@@ -64,15 +64,20 @@ func UntrackedFiles() ([]string, error) {
 func parseStatus(out string, wantUntracked bool) []string {
 	var files []string
 	for _, line := range strings.Split(out, "\n") {
+		line := strings.TrimSpace(line)
 		if len(line) < 4 {
 			continue
 		}
 		code := line[:2]
-		name := strings.TrimSpace(line[3:])
+		firstSpace := strings.Index(line, " ")
+
+		name := strings.TrimSpace(line[firstSpace:])
 		isUntracked := code == "??"
-		if wantUntracked == isUntracked {
+		isModified := code == "M "
+		if wantUntracked == isUntracked || isModified {
 			files = append(files, name)
 		}
+
 	}
 	return files
 }

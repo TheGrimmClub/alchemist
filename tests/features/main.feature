@@ -1,10 +1,22 @@
-Feature: Main command
+Feature: Root command
   As a user
-  I want to learn more about the `alchemist` command and its capabilities
-  So that I can use it effectively in my projects
+  I want to see what alchemist can do
+  So that I can choose the right subcommand
 
-  Scenario: Help command shows usage information
-    When I run exists with "--help"
+  Scenario: Help shows usage and all subcommands
+    When I run alchemist "--help"
     Then the exit code is 0
     And stdout contains "Usage:"
     And stdout contains "Available Commands:"
+    And stdout contains "start"
+    And stdout contains "brew"
+    And stdout contains "bottle"
+    And stdout contains "discard"
+    And stdout contains "stash"
+    And stdout contains "clean"
+    And stdout contains "recipe"
+
+  Scenario: Running without arguments shows help
+    When I run alchemist ""
+    Then the exit code is 0
+    And stdout contains "Usage:"
