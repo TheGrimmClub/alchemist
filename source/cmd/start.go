@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
@@ -21,7 +23,11 @@ which encourages you to decide what you're doing before you do it.`,
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-		result, err := tea.NewProgram(tui.NewStartModel()).Run()
+		existing, _ := state.Load()
+		result, err := tea.NewProgram(
+			tui.NewStartModel(existing.TaskName),
+			tea.WithInput(os.Stdin),
+		).Run()
 		if err != nil {
 			return err
 		}
@@ -32,10 +38,14 @@ which encourages you to decide what you're doing before you do it.`,
 		if m.Aborted || m.Name() == "" {
 			return nil
 		}
-		return state.Save(state.State{
+		if err := state.Save(state.State{
 			TaskName:    m.Name(),
 			Description: m.Desc(),
 			CreatedAt:   time.Now(),
-		})
+		}); err != nil {
+			return err
+		}
+		fmt.Printf("Task started: %s\n", m.Name())
+		return nil
 	},
 }

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
 	"github.com/TheGrimmClub/alchemist/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,7 +20,7 @@ working tree so you can switch gears. Run with --resume to bring the work back.`
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-		m, err := tea.NewProgram(tui.NewStashModel(stashResume)).Run()
+		m, err := tea.NewProgram(tui.NewStashModel(stashResume), tea.WithInput(os.Stdin)).Run()
 		if err != nil {
 			return err
 		}

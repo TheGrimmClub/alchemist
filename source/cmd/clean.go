@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
 	"github.com/TheGrimmClub/alchemist/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,7 +18,7 @@ files. Tracked files are left alone — use 'alchemist discard' for those.`,
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-		m, err := tea.NewProgram(tui.NewCleanModel()).Run()
+		m, err := tea.NewProgram(tui.NewCleanModel(), tea.WithInput(os.Stdin)).Run()
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/TheGrimmClub/alchemist/internal/gitutil"
 	"github.com/TheGrimmClub/alchemist/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,7 +18,7 @@ that have changed since your last commit.`,
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-		m, err := tea.NewProgram(tui.NewHmModel()).Run()
+		m, err := tea.NewProgram(tui.NewHmModel(), tea.WithInput(os.Stdin)).Run()
 		if err != nil {
 			return err
 		}

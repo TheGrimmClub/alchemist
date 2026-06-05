@@ -1,0 +1,1 @@
+ignore_paths = ["tests/steps/binary_execution.py", "tests/steps/results.py"",]

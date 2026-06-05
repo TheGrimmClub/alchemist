@@ -7,7 +7,22 @@
       "Bash(go build *)",
       "Bash(go vet *)",
       "Bash(go mod *)",
-      "Bash(/tmp/alchemist-test --help)"
+      "Bash(/tmp/alchemist-test --help)",
+      "Bash(behave tests/features/)",
+      "Bash(behave *)",
+      "Bash(alchemist stash *)",
+      "Bash(go install *)",
+      "Bash(/tmp/alchemist_test discard *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(/Users/felix/go/bin/alchemist start *)",
+      "Bash(/Users/felix/go/bin/alchemist discard *)",
+      "Bash(python -c \"from scaphoid import Shell, RunConfig, Result; print\\('ok'\\)\")",
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/pytest tests/scaphoid/ -v)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(.venv/bin/pytest *)"
     ]
   }
 }
