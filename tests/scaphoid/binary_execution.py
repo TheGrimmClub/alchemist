@@ -8,13 +8,13 @@ Why not raw ``subprocess.run``:
   assertion methods and rich failure messages.
 * Never uses ``shell=True`` implicitly; string commands are tokenised with
   ``shlex.split``.
-* :class:`~scaphoid.environment.Environment` keeps env-var injection explicit and
+* :class:`~scaphoid.environment.EnvironmentConfig` keeps env-var injection explicit and
   immutable, so one test cannot pollute another.
 * A timeout by default so one hung binary can't wedge the whole run.
 
 Typical use inside a behave step::
 
-    from scaphoid import BinaryExecution, RunConfig, Environment
+    from scaphoid import BinaryExecution, RunConfig, EnvironmentConfig
 
     context.sh = BinaryExecution(RunConfig(path=tmpdir))
     context.sh.run("alchemist brew") \\
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from dataclasses import replace as _replace
 from typing import Sequence
 
-from .environment import Environment
+from .environment import EnvironmentConfig
 from .result import ExecutionResult
 
 __all__ = ["RunConfig", "BinaryExecution", "run"]
@@ -43,7 +43,7 @@ class RunConfig:
     """How a command is run. Immutable; derive variants with ``.replace(...)``."""
 
     path: str | os.PathLike | None = None
-    environment: Environment | None = None  # None → inherit from parent process
+    environment: EnvironmentConfig | None = None  # None → inherit from parent process
     timeout: float | None = 30.0
     shell: bool = False
     check: bool = False
@@ -130,7 +130,7 @@ class BinaryExecution:
 
     def set_env(self, key: str, value: str) -> None:
         """Add a single environment variable, extending the current environment."""
-        base = self.config.environment or Environment.extended()
+        base = self.config.environment or EnvironmentConfig.merge()
         self.config = self.config.replace(environment=base.with_var(key, value))
 
     def run(

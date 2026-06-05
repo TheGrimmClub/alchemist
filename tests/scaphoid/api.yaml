@@ -1,24 +1,35 @@
 scaphoid:
   modules:
-    env:
+    environment:
       classes:
-        Environment:
-          kind: class (custom immutable, __slots__)
-          construction:
-            Environment.extended(extras: Mapping | None = None) -> Environment
-            Environment.isolated(vars: Mapping) -> Environment
+        EnvironmentMode:
+          kind: Enum
+          members:
+            CLEAN: "clean"      # completely empty — no variables at all
+            REPLACE: "replace"  # exactly the given variables; os.environ ignored
+            MERGE: "merge"      # os.environ + variables (variables win)
+            ALLOW: "allow"      # selected keys from os.environ + variables
+            DENY: "deny"        # os.environ minus blocked keys + variables
+
+        EnvironmentConfig:
+          kind: dataclass frozen
+          fields:
+            mode: EnvironmentMode  # default MERGE
+            variables: dict[str, str] | None  # default None
+            allow_list: frozenset[str] | None  # default None (ALLOW mode)
+            deny_list: frozenset[str] | None   # default None (DENY mode)
+          validation:
+            __post_init__: REPLACE requires variables; ALLOW requires allow_list; DENY requires deny_list
+          factories:
+            EnvironmentConfig.clean() -> EnvironmentConfig
+            EnvironmentConfig.replace(variables: Mapping) -> EnvironmentConfig
+            EnvironmentConfig.merge(variables: Mapping | None = None) -> EnvironmentConfig
+            EnvironmentConfig.allow(keys: set, variables: Mapping | None = None) -> EnvironmentConfig
+            EnvironmentConfig.deny(keys: set, variables: Mapping | None = None) -> EnvironmentConfig
           mutation:
-            with_var(key: str, value: str) -> Environment  # returns new instance
+            with_var(key: str, value: str) -> EnvironmentConfig  # returns new instance
           resolution:
             resolve() -> dict[str, str]
-          properties:
-            vars -> dict[str, str]   # explicit vars only, no os.environ
-            is_isolated -> bool
-          dunder:
-            __eq__(other) -> bool
-            __hash__() -> int
-            __repr__() -> str
-            __setattr__: raises AttributeError (immutable)
 
     streams:
       classes:

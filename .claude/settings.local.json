@@ -22,7 +22,14 @@
       "Bash(.venv/bin/pip install *)",
       "Bash(.venv/bin/pytest tests/scaphoid/ -v)",
       "Bash(python3 -m venv .venv)",
-      "Bash(.venv/bin/pytest *)"
+      "Bash(.venv/bin/pytest *)",
+      "Bash(xargs cat -n)",
+      "Bash(cat)",
+      "Bash(chmod +x /Users/felix/Desktop/42/1_Projects/TheGrimmClub/alchemist/.git/hooks/pre-commit)",
+      "Bash(uv sync *)",
+      "Bash(sed -i '' 's/Environment\\\\.extended/EnvironmentConfig.merge/g; s/Environment\\\\.isolated/EnvironmentConfig.replace/g' /Users/felix/Desktop/42/1_Projects/TheGrimmClub/alchemist/tests/scaphoid/test_binary_execution.py)",
+      "Bash(sed -i '' 's/from scaphoid\\\\.environment import Environment$/from scaphoid.environment import EnvironmentConfig/' /Users/felix/Desktop/42/1_Projects/TheGrimmClub/alchemist/tests/scaphoid/test_binary_execution.py)",
+      "Bash(uv run *)"
     ]
   }
 }

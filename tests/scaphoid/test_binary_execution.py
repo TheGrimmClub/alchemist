@@ -3,7 +3,7 @@ import os
 import pytest
 
 from scaphoid.binary_execution import BinaryExecution, RunConfig, _resolve_env, run
-from scaphoid.environment import Environment
+from scaphoid.environment import EnvironmentConfig, EnvironmentMode
 from scaphoid.result import ExecutionResult
 
 # ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ class TestRunConfigFields:
         assert RunConfig(path=tmp_path).path == tmp_path
 
     def test_environment_stored(self):
-        env = Environment.extended({"KEY": "val"})
+        env = EnvironmentConfig.merge({"KEY": "val"})
         assert RunConfig(environment=env).environment == env
 
     def test_timeout_stored(self):
@@ -74,7 +74,7 @@ class TestRunConfigReplace:
 
 
 # ---------------------------------------------------------------------------
-# _resolve_env — delegates to Environment.resolve()
+# _resolve_env — delegates to EnvironmentConfig.resolve()
 # ---------------------------------------------------------------------------
 
 
@@ -82,20 +82,20 @@ class TestResolveEnv:
     def test_none_returns_none(self):
         assert _resolve_env(RunConfig()) is None
 
-    def test_isolated_environment_returns_only_given_vars(self):
-        env = Environment.isolated({"FOO": "bar"})
+    def test_replace_environment_returns_only_given_vars(self):
+        env = EnvironmentConfig.replace({"FOO": "bar"})
         result = _resolve_env(RunConfig(environment=env))
         assert result == {"FOO": "bar"}
         assert "PATH" not in result
 
-    def test_extended_environment_merges_os_environ(self):
-        env = Environment.extended({"SCAPHOID_RESOLVE_TEST": "yes"})
+    def test_merge_environment_merges_os_environ(self):
+        env = EnvironmentConfig.merge({"SCAPHOID_RESOLVE_TEST": "yes"})
         result = _resolve_env(RunConfig(environment=env))
         assert result["SCAPHOID_RESOLVE_TEST"] == "yes"
         assert "PATH" in result
 
-    def test_extended_overrides_os_environ_key(self):
-        env = Environment.extended({"PATH": "overridden"})
+    def test_merge_overrides_os_environ_key(self):
+        env = EnvironmentConfig.merge({"PATH": "overridden"})
         result = _resolve_env(RunConfig(environment=env))
         assert result["PATH"] == "overridden"
 
@@ -168,14 +168,14 @@ class TestRunCheck:
 
 
 class TestRunEnvironment:
-    def test_extended_environment_visible_to_process(self):
-        env = Environment.extended({"SCAPHOID_RUN_VAR": "present"})
+    def test_merge_environment_visible_to_process(self):
+        env = EnvironmentConfig.merge({"SCAPHOID_RUN_VAR": "present"})
         run(
             ["sh", "-c", "echo $SCAPHOID_RUN_VAR"], RunConfig(environment=env)
         ).stdout.contains("present")
 
-    def test_isolated_environment_hides_os_environ(self):
-        env = Environment.isolated({"PATH": os.environ["PATH"]})
+    def test_replace_environment_hides_os_environ(self):
+        env = EnvironmentConfig.replace({"PATH": os.environ["PATH"]})
         run(
             ["sh", "-c", "echo ${SCAPHOID_RUN_VAR:-absent}"],
             RunConfig(environment=env),
@@ -252,15 +252,15 @@ class TestShellSetEnv:
     def test_stores_environment_object_on_config(self):
         sh = BinaryExecution()
         sh.set_env("X", "1")
-        assert isinstance(sh.config.environment, Environment)
+        assert isinstance(sh.config.environment, EnvironmentConfig)
 
     def test_does_not_lose_previous_vars(self):
         sh = BinaryExecution()
         sh.set_env("A", "1")
         sh.set_env("B", "2")
-        assert sh.config.environment.vars == {"A": "1", "B": "2"}
+        assert sh.config.environment.variables == {"A": "1", "B": "2"}
 
-    def test_defaults_to_extended_mode(self):
+    def test_defaults_to_merge_mode(self):
         sh = BinaryExecution()
         sh.set_env("X", "1")
-        assert sh.config.environment.is_isolated is False
+        assert sh.config.environment.mode is EnvironmentMode.MERGE

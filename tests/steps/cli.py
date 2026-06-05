@@ -5,14 +5,14 @@ import shlex
 from behave import given, then, when
 import subprocess
 
-from scaphoid import Environment, RunConfig, BinaryExecution
+from scaphoid import EnvironmentConfig, RunConfig, BinaryExecution
 
 BINARY = "alchemist"
 
 
 def _run_cmd(context, args, stdin=None):
     """Run alchemist with the given args list, storing results on context."""
-    env = Environment.extended(context.extra_env) if context.extra_env else None
+    env = EnvironmentConfig.merge(context.extra_env) if context.extra_env else None
     cfg = RunConfig(path=context.tmpdir, environment=env)
     result = BinaryExecution(cfg).run([BINARY, *args], stdin=stdin)
     context.returncode = result.exit_code

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main, trunk]
+  pull_request:
+    branches: [main, trunk]
+
+jobs:
+  go:
+    name: Go — fmt / vet / build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: source/go.mod
+          cache-dependency-path: source/go.sum
+
+      - uses: arduino/setup-task@v2
+
+      - run: task check
+
+  pytest:
+    name: Python — pytest (scaphoid unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - run: uv run pytest
+
+  behave:
+    name: Python — behave (CLI integration tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: source/go.mod
+          cache-dependency-path: source/go.sum
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Build and install alchemist binary
+        run: cd source && go install .
+
+      - run: uv run behave --no-capture

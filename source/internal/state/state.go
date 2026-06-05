@@ -4,6 +4,7 @@ package state
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
@@ -37,18 +38,27 @@ func Save(s State) error {
 	return os.WriteFile(path(), data, 0o644)
 }
 
-// Load reads the current task. It returns an error if none is saved.
+// Load reads the current task. A missing state file is not an error — it
+// simply means no task has been started yet, so an empty State is returned.
+// Real errors (corrupt JSON, permission problems) are still surfaced.
 func Load() (State, error) {
 	var s State
 	data, err := os.ReadFile(path())
-	if err != nil {
-		return s, err
+	if errors.Is(err, os.ErrNotExist) {
+		return s, nil // no task started yet — empty state, not an error
 	}
-	err = json.Unmarshal(data, &s)
-	return s, err
+	if err != nil {
+		return s, err // real error (permissions, …)
+	}
+	return s, json.Unmarshal(data, &s)
 }
 
-// Clear removes the saved task (called once work is bottled).
+// Clear removes the saved task (called once work is bottled). It is
+// idempotent: clearing when no task exists is a no-op, not an error.
 func Clear() error {
-	return os.Remove(path())
+	err := os.Remove(path())
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
 }

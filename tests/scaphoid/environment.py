@@ -1,85 +1,132 @@
-"""Environment — immutable environment variable set for subprocess calls."""
+"""
+file:
+    name: environment.py
+    id: 019e9850-0000-7000-0000-000000000001
+    defines: __all__
+---
+EnvironmentMode and EnvironmentConfig — subprocess environment management.
+"""
 
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
+from enum import Enum
 from typing import Mapping
 
-__all__ = ["Environment"]
+__all__ = ["EnvironmentMode", "EnvironmentConfig"]
 
 
-class Environment:
-    """An immutable set of environment variables for a subprocess call.
+class EnvironmentMode(Enum):
+    """How the subprocess environment is constructed relative to os.environ."""
 
-    Two construction modes:
+    CLEAN   = "clean"    # completely empty — no variables at all
+    REPLACE = "replace"  # exactly the given variables; os.environ ignored
+    MERGE   = "merge"    # os.environ + variables (variables win on conflict)
+    ALLOW   = "allow"    # selected keys from os.environ + variables
+    DENY    = "deny"     # os.environ minus blocked keys + variables
 
-    * :meth:`extended` — starts from ``os.environ`` and adds/overrides keys.
-      This is the most common mode: inherit the system environment and inject
-      a few test-specific variables on top.
-    * :meth:`isolated` — uses *only* the given vars; nothing from
-      ``os.environ`` bleeds through, which is useful for hermetic tests.
 
-    Both modes are immutable. :meth:`with_var` always returns a new instance::
+@dataclass(frozen=True)
+class EnvironmentConfig:
+    """Immutable environment specification for a subprocess call.
 
-        env = Environment.extended({"DEBUG": "1"})
-        env2 = env.with_var("PORT", "8080")   # env is unchanged
+    Five modes — choose the factory that matches your intent::
+
+        EnvironmentConfig.clean()
+        EnvironmentConfig.replace({"PATH": "/usr/bin"})
+        EnvironmentConfig.merge({"DEBUG": "1"})
+        EnvironmentConfig.allow({"PATH", "HOME"}, {"PORT": "8080"})
+        EnvironmentConfig.deny({"SECRET_KEY"}, {"DEBUG": "1"})
     """
 
-    __slots__ = ("_mapping", "_mode")
+    mode: EnvironmentMode = EnvironmentMode.MERGE
+    variables: dict[str, str] | None = None
+    allow_list: frozenset[str] | None = None
+    deny_list:  frozenset[str] | None = None
 
-    def __init__(self, mapping: dict[str, str], *, mode: str) -> None:
-        object.__setattr__(self, "_mapping", dict(mapping))
-        object.__setattr__(self, "_mode", mode)
-
-    def __setattr__(self, name: str, value: object) -> None:
-        raise AttributeError("Environment is immutable")
+    def __post_init__(self) -> None:
+        if self.mode is EnvironmentMode.REPLACE and not self.variables:
+            raise ValueError("REPLACE mode requires a non-empty variables dict")
+        if self.mode is EnvironmentMode.ALLOW and not self.allow_list:
+            raise ValueError("ALLOW mode requires allow_list")
+        if self.mode is EnvironmentMode.DENY and not self.deny_list:
+            raise ValueError("DENY mode requires deny_list")
 
     # --- factories -----------------------------------------------------------
 
     @classmethod
-    def extended(cls, extras: Mapping[str, str] | None = None) -> "Environment":
-        """os.environ merged with *extras*; extras win on conflict."""
-        return cls(dict(extras or {}), mode="extended")
+    def clean(cls) -> "EnvironmentConfig":
+        """Completely empty environment — no variables whatsoever."""
+        return cls(mode=EnvironmentMode.CLEAN)
 
     @classmethod
-    def isolated(cls, vars: Mapping[str, str]) -> "Environment":
-        """Use *only* these vars — nothing from os.environ."""
-        return cls(dict(vars), mode="isolated")
+    def replace(cls, variables: Mapping[str, str]) -> "EnvironmentConfig":
+        """Use *variables* as the entire environment; nothing from os.environ."""
+        return cls(mode=EnvironmentMode.REPLACE, variables=dict(variables))
+
+    @classmethod
+    def merge(cls, variables: Mapping[str, str] | None = None) -> "EnvironmentConfig":
+        """os.environ + *variables* (variables win on conflict)."""
+        return cls(mode=EnvironmentMode.MERGE, variables=dict(variables or {}))
+
+    @classmethod
+    def allow(
+        cls,
+        keys: set[str],
+        variables: Mapping[str, str] | None = None,
+    ) -> "EnvironmentConfig":
+        """Inherit only *keys* from os.environ, then overlay *variables*."""
+        return cls(
+            mode=EnvironmentMode.ALLOW,
+            variables=dict(variables or {}),
+            allow_list=frozenset(keys),
+        )
+
+    @classmethod
+    def deny(
+        cls,
+        keys: set[str],
+        variables: Mapping[str, str] | None = None,
+    ) -> "EnvironmentConfig":
+        """Inherit all of os.environ except *keys*, then overlay *variables*."""
+        return cls(
+            mode=EnvironmentMode.DENY,
+            variables=dict(variables or {}),
+            deny_list=frozenset(keys),
+        )
 
     # --- mutation (immutable update) -----------------------------------------
 
-    def with_var(self, key: str, value: str) -> "Environment":
-        """Return a new Environment with *key* set to *value*."""
-        return Environment({**self._mapping, key: value}, mode=self._mode)
+    def with_var(self, key: str, value: str) -> "EnvironmentConfig":
+        """Return a new EnvironmentConfig with *key* set to *value*."""
+        new_vars = dict(self.variables or {})
+        new_vars[key] = value
+        return EnvironmentConfig(
+            mode=self.mode,
+            variables=new_vars,
+            allow_list=self.allow_list,
+            deny_list=self.deny_list,
+        )
 
     # --- resolution ----------------------------------------------------------
 
     def resolve(self) -> dict[str, str]:
-        """Return the concrete dict to pass to subprocess."""
-        if self._mode == "isolated":
-            return dict(self._mapping)
-        return {**os.environ, **self._mapping}
-
-    # --- introspection -------------------------------------------------------
-
-    @property
-    def vars(self) -> dict[str, str]:
-        """The explicitly set variables (not including os.environ)."""
-        return dict(self._mapping)
-
-    @property
-    def is_isolated(self) -> bool:
-        return self._mode == "isolated"
-
-    # --- dunder --------------------------------------------------------------
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Environment):
-            return NotImplemented
-        return self._mapping == other._mapping and self._mode == other._mode
-
-    def __hash__(self) -> int:
-        return hash((tuple(sorted(self._mapping.items())), self._mode))
-
-    def __repr__(self) -> str:
-        return f"Environment.{self._mode}({dict(self._mapping)!r})"
+        """Return the final environment dict to pass to subprocess."""
+        match self.mode:
+            case EnvironmentMode.CLEAN:
+                return {}
+            case EnvironmentMode.REPLACE:
+                return dict(self.variables or {})
+            case EnvironmentMode.MERGE:
+                result = dict(os.environ)
+                result.update(self.variables or {})
+                return result
+            case EnvironmentMode.ALLOW:
+                result = {k: os.environ[k] for k in self.allow_list if k in os.environ}
+                result.update(self.variables or {})
+                return result
+            case EnvironmentMode.DENY:
+                result = {k: v for k, v in os.environ.items() if k not in self.deny_list}
+                result.update(self.variables or {})
+                return result

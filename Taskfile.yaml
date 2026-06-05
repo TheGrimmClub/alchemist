@@ -91,11 +91,25 @@ tasks:
       - task: build
 
   test:
-    desc: Run tests
+    desc: Run all tests (behave + pytest)
     dir: .
     preconditions:
       - sh: exists directory "./tests/features"
-        msg: did not find `main.go` in ./{{.SOURCE_DIR}}
+        msg: did not find tests/features directory
     cmds:
-      - echo "Running tests..."
-      - uv run behave
+      - echo "Running behave..."
+      - uv run behave --no-capture
+      - echo "Running pytest..."
+      - uv run pytest
+
+  test:pytest:
+    desc: Run only the pytest suite (scaphoid unit tests)
+    dir: .
+    cmds:
+      - uv run pytest
+
+  test:behave:
+    desc: Run only the behave suite (CLI integration tests)
+    dir: .
+    cmds:
+      - uv run behave --no-capture
