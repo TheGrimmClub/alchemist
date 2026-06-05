@@ -13,8 +13,9 @@ import (
 )
 
 var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Name the task you're about to work on",
+	Use:     "start",
+	Aliases: []string{"next"},
+	Short:   "Name the task you're about to work on",
 	Long: `Records the task name and a short description before you write any code.
 
 The task name becomes the title of your commit when you run 'alchemist brew',

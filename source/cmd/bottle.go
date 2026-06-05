@@ -10,8 +10,9 @@ import (
 )
 
 var bottleCmd = &cobra.Command{
-	Use:   "bottle",
-	Short: "Finalize your work: optional version tag and push",
+	Use:     "bottle",
+	Aliases: []string{"push"},
+	Short:   "Finalize your work: optional version tag and push",
 	Long: `Pushes your committed work. Optionally creates an annotated version
 tag first. Once everything is pushed, the current task is cleared.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

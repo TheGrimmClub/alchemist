@@ -10,8 +10,9 @@ import (
 )
 
 var discardCmd = &cobra.Command{
-	Use:   "discard",
-	Short: "Throw away uncommitted changes to tracked files",
+	Use:     "discard",
+	Aliases: []string{"purge"},
+	Short:   "Throw away uncommitted changes to tracked files",
 	Long: `Reverts tracked files to their last committed state. This cannot be
 undone. Untracked files are left alone — use 'alchemist clean' for those.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

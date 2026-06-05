@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type hmLoadedMsg struct {
+type lookLoadedMsg struct {
 	task      state.State
 	hasTask   bool
 	changed   []string
@@ -17,7 +17,7 @@ type hmLoadedMsg struct {
 }
 
 // HmModel displays the current task and changed files.
-type HmModel struct {
+type LookModel struct {
 	task      state.State
 	hasTask   bool
 	changed   []string
@@ -26,25 +26,25 @@ type HmModel struct {
 	FinalErr  error
 }
 
-func NewHmModel() HmModel {
-	return HmModel{loading: true}
+func NewLookModel() LookModel {
+	return LookModel{loading: true}
 }
 
-func (m HmModel) Init() tea.Cmd {
+func (m LookModel) Init() tea.Cmd {
 	return func() tea.Msg {
 		s, err := state.Load()
 		if err != nil {
-			return hmLoadedMsg{err: err}
+			return lookLoadedMsg{err: err}
 		}
 		changed, err := gitutil.ChangedFiles()
 		if err != nil {
-			return hmLoadedMsg{err: err}
+			return lookLoadedMsg{err: err}
 		}
 		untracked, err := gitutil.UntrackedFiles()
 		if err != nil {
-			return hmLoadedMsg{err: err}
+			return lookLoadedMsg{err: err}
 		}
-		return hmLoadedMsg{
+		return lookLoadedMsg{
 			task:      s,
 			hasTask:   s.TaskName != "",
 			changed:   changed,
@@ -53,9 +53,9 @@ func (m HmModel) Init() tea.Cmd {
 	}
 }
 
-func (m HmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m LookModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case hmLoadedMsg:
+	case lookLoadedMsg:
 		if msg.err != nil {
 			m.FinalErr = msg.err
 			return m, tea.Quit
@@ -72,7 +72,7 @@ func (m HmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m HmModel) View() string {
+func (m LookModel) View() string {
 	if m.loading {
 		return ""
 	}

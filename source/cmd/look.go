@@ -9,19 +9,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hmCmd = &cobra.Command{
-	Use:   "hm",
-	Short: "Check your current task and changed files",
+var lookCmd = &cobra.Command{
+	Use:     "look",
+	Aliases: []string{"hm"},
+	Short:   "Check your current task and changed files",
 	Long: `Shows the task you named with 'alchemist start' and lists all files
 that have changed since your last commit.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if err := gitutil.EnsureRepo(); err != nil {
 			return err
 		}
-		m, err := tea.NewProgram(tui.NewHmModel(), tea.WithInput(os.Stdin)).Run()
+		m, err := tea.NewProgram(tui.NewLookModel(), tea.WithInput(os.Stdin)).Run()
 		if err != nil {
 			return err
 		}
-		return m.(tui.HmModel).FinalErr
+		return m.(tui.LookModel).FinalErr
 	},
 }

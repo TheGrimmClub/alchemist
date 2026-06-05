@@ -10,8 +10,9 @@ import (
 )
 
 var cleanCmd = &cobra.Command{
-	Use:   "clean",
-	Short: "Remove untracked files (build artifacts, stray files)",
+	Use:     "clean",
+	Aliases: []string{"remove"},
+	Short:   "Remove untracked files (build artifacts, stray files)",
 	Long: `Deletes files git is not tracking, such as build output and stray
 files. Tracked files are left alone — use 'alchemist discard' for those.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

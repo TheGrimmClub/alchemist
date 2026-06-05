@@ -12,8 +12,9 @@ import (
 )
 
 var brewCmd = &cobra.Command{
-	Use:   "brew",
-	Short: "Commit your work with a meaningful message",
+	Use:     "brew",
+	Aliases: []string{"commit"},
+	Short:   "Commit your work with a meaningful message",
 	Long: `Stages your changes and commits them using the task name you set with
 'alchemist start' as the commit title. The description (if any) becomes the
 commit body.`,

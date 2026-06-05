@@ -12,8 +12,9 @@ import (
 var stashResume bool
 
 var stashCmd = &cobra.Command{
-	Use:   "stash",
-	Short: "Pause your work and set it aside to resume later",
+	Use:     "stash",
+	Aliases: []string{"leave"},
+	Short:   "Pause your work and set it aside to resume later",
 	Long: `Saves your in-progress changes without committing, leaving a clean
 working tree so you can switch gears. Run with --resume to bring the work back.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
