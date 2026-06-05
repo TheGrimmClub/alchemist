@@ -18,8 +18,20 @@ Feature: stash command
     Then the exit code is 1
     And stderr contains "not a git repository"
 
-  Scenario: Runs stash in a clean repository
+  Scenario: Shows confirmation prompt when run in a repository
     Given I am in a git repository
-    When I run alchemist "stash"
+    When I run alchemist "stash" with input
+      """
+      n
+      """
     Then the exit code is 0
-    And stdout contains "Pausing your work"
+    And stdout contains "Stash: pause your work"
+
+  Scenario: Cancels stash when the user declines
+    Given I am in a git repository
+    When I run alchemist "stash" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "Cancelled"

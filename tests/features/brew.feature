@@ -32,3 +32,33 @@ Feature: brew command
     When I run alchemist "brew"
     Then the exit code is 0
     And stdout contains "Nothing to commit"
+
+  Scenario: Commits changes when the user confirms
+    Given I am in a git repository
+    And a task "Add greeting" is in progress
+    And a tracked file "hello.txt" with uncommitted changes exists
+    When I run alchemist "brew" with input
+      """
+      y
+      """
+    Then the exit code is 0
+    And stdout contains "Brewed"
+    And stdout contains "Add greeting"
+
+  Scenario: Cancels commit when the user declines
+    Given I am in a git repository
+    And a task "Add greeting" is in progress
+    And a tracked file "hello.txt" with uncommitted changes exists
+    When I run alchemist "brew" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "Cancelled"
+
+  Scenario: Fails to commit when there is no active task but there are changes
+    Given I am in a git repository
+    And a tracked file "hello.txt" with uncommitted changes exists
+    When I run alchemist "brew"
+    Then the exit code is 1
+    And stderr contains "no task in progress"

@@ -42,3 +42,17 @@ Feature: recipe command
     Then the exit code is 0
     And stdout contains "test-project"
     And stdout contains "ready (template: blank)"
+
+  Scenario: Uses default project name when none is given
+    When I run alchemist "recipe blank" with input
+      """
+
+      """
+    Then the exit code is 0
+    And stdout contains "my-project"
+    And stdout contains "ready (template: blank)"
+
+  Scenario: Rejects empty template name
+    When I run alchemist "recipe  "
+    Then the exit code is 1
+    And stderr contains "unknown template"

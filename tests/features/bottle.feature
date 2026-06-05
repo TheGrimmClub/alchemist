@@ -12,3 +12,21 @@ Feature: bottle command
     When I run alchemist "bottle"
     Then the exit code is 1
     And stderr contains "not a git repository"
+
+  Scenario: Shows push confirmation prompt
+    Given I am in a git repository
+    When I run alchemist "bottle" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "Bottle: push your work"
+
+  Scenario: Cancels push when the user declines
+    Given I am in a git repository
+    When I run alchemist "bottle" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "Cancelled"

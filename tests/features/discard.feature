@@ -40,3 +40,16 @@ Feature: discard command
       """
     Then the exit code is 0
     And stdout contains "Changes discarded"
+
+  Scenario: Shows multiple changed files before confirmation
+    Given I am in a git repository
+    And a tracked file "alpha.txt" with uncommitted changes exists
+    And a tracked file "beta.txt" with uncommitted changes exists
+    When I run alchemist "discard" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "alpha.txt"
+    And stdout contains "beta.txt"
+    And stdout contains "Cancelled"

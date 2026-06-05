@@ -17,6 +17,6 @@ Feature: Root command
     And stdout contains "recipe"
 
   Scenario: Running without arguments shows help
-    When I run alchemist ""
+    When I run alchemist with no arguments
     Then the exit code is 0
     And stdout contains "Usage:"

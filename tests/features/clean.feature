@@ -18,3 +18,25 @@ Feature: clean command
     When I run alchemist "clean"
     Then the exit code is 0
     And stdout contains "Nothing to clean"
+
+  Scenario: Shows untracked files and cancels when the user declines
+    Given I am in a git repository
+    And an untracked file "build.out" exists
+    When I run alchemist "clean" with input
+      """
+      n
+      """
+    Then the exit code is 0
+    And stdout contains "build.out"
+    And stdout contains "Cancelled"
+
+  Scenario: Deletes untracked files when the user confirms
+    Given I am in a git repository
+    And an untracked file "build.out" exists
+    When I run alchemist "clean" with input
+      """
+      y
+      """
+    Then the exit code is 0
+    And stdout contains "removed"
+    And the file "build.out" does not exist

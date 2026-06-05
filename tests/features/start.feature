@@ -47,3 +47,15 @@ Feature: start command
     Then the exit code is 0
     And stdout contains "Task started: New Task"
     And the task is saved as "New Task"
+
+  Scenario: Rejects an empty task name
+    Given I am in a git repository
+    When I run alchemist "start" with input
+      """
+
+      My Task
+
+      """
+    Then the exit code is 0
+    And stdout contains "A task name is required"
+    And the task is saved as "My Task"

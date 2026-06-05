@@ -1,25 +1,23 @@
 import json
 import os
 import shlex
-import subprocess
 
 from behave import given, then, when
+import subprocess
+
+from scaphoid import Environment, RunConfig, BinaryExecution
 
 BINARY = "alchemist"
 
 
-def _run(args, extra_env=None, stdin=None, cwd=None):
-    env = {**os.environ, **(extra_env or {})}
-    proc = subprocess.run(
-        [BINARY, *args],
-        input=stdin,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-        env=env,
-        cwd=cwd,
-    )
-    return proc.returncode, proc.stdout, proc.stderr
+def _run_cmd(context, args, stdin=None):
+    """Run alchemist with the given args list, storing results on context."""
+    env = Environment.extended(context.extra_env) if context.extra_env else None
+    cfg = RunConfig(path=context.tmpdir, environment=env)
+    result = BinaryExecution(cfg).run([BINARY, *args], stdin=stdin)
+    context.returncode = result.exit_code
+    context.stdout = result.stdout.content
+    context.stderr = result.stderr.content
 
 
 # ---------------------------------------------------------------------------
@@ -33,7 +31,6 @@ def step_in_git_repo(context):
     subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=context.tmpdir, check=True)
     subprocess.run(["git", "config", "user.name", "Test User"], cwd=context.tmpdir, check=True)
     subprocess.run(["git", "config", "commit.gpgsign", "false"], cwd=context.tmpdir, check=True)
-    # Ignore alchemist state so it never appears as an untracked file in git status
     with open(os.path.join(context.tmpdir, ".gitignore"), "w") as f:
         f.write(".alchemist/\n")
     subprocess.run(["git", "add", ".gitignore"], cwd=context.tmpdir, check=True)
@@ -60,6 +57,13 @@ def step_tracked_file_with_changes(context, name):
         f.write("modified content")
 
 
+@given('an untracked file "{name}" exists')
+def step_untracked_file(context, name):
+    filepath = os.path.join(context.tmpdir, name)
+    with open(filepath, "w") as f:
+        f.write("untracked content")
+
+
 @given('the environment variable "{name}" is set to "{value}"')
 def step_set_env(context, name, value):
     context.extra_env[name] = value
@@ -72,19 +76,18 @@ def step_set_env(context, name, value):
 
 @when('I run alchemist "{command}"')
 def step_run_alchemist(context, command):
-    args = shlex.split(command) if command else []
-    context.returncode, context.stdout, context.stderr = _run(
-        args, extra_env=context.extra_env, cwd=context.tmpdir
-    )
+    _run_cmd(context, shlex.split(command) if command else [])
+
+
+@when("I run alchemist with no arguments")
+def step_run_alchemist_noargs(context):
+    _run_cmd(context, [])
 
 
 @when('I run alchemist "{command}" with input')
 def step_run_alchemist_with_input(context, command):
-    args = shlex.split(command) if command else []
     stdin = context.text + "\n"
-    context.returncode, context.stdout, context.stderr = _run(
-        args, extra_env=context.extra_env, stdin=stdin, cwd=context.tmpdir
-    )
+    _run_cmd(context, shlex.split(command) if command else [], stdin=stdin)
 
 
 # ---------------------------------------------------------------------------
@@ -135,3 +138,9 @@ def step_no_task(context):
     assert not os.path.exists(state_file), (
         "Expected no active task, but .alchemist/current.json exists"
     )
+
+
+@then('the file "{name}" does not exist')
+def step_file_not_exist(context, name):
+    filepath = os.path.join(context.tmpdir, name)
+    assert not os.path.exists(filepath), f"Expected {name!r} to be deleted but it still exists"
